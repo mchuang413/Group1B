@@ -4,11 +4,11 @@ import React, { useState } from "react";
 const Page = () => {
   const [locations, setLocations] = useState([""]);
   const [symptoms, setSymptoms] = useState([""]);
+  const [previousIllnesses, setPreviousIllnesses] = useState([""]);
+  const [medications, setMedications] = useState([""]);
   const [formData, setFormData] = useState({
     ageGroup: "",
     painLevel: 0,
-    previousIllnesses: "",
-    medications: "",
     medicationDuration: "",
     organStimulation: "",
     incidenceRates: {
@@ -20,6 +20,8 @@ const Page = () => {
       "50+ Female": "",
     },
   });
+
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const addSymptom = () => {
     setSymptoms([...symptoms, ""]);
@@ -41,6 +43,26 @@ const Page = () => {
     setLocations(newLocations);
   };
 
+  const addPreviousIllness = () => {
+    setPreviousIllnesses([...previousIllnesses, ""]);
+  };
+
+  const handlePreviousIllnessChange = (index, value) => {
+    const newPreviousIllnesses = [...previousIllnesses];
+    newPreviousIllnesses[index] = value;
+    setPreviousIllnesses(newPreviousIllnesses);
+  };
+
+  const addMedication = () => {
+    setMedications([...medications, ""]);
+  };
+
+  const handleMedicationChange = (index, value) => {
+    const newMedications = [...medications];
+    newMedications[index] = value;
+    setMedications(newMedications);
+  };
+
   const handleInputChange = (name, value) => {
     setFormData((prevData) => ({
       ...prevData,
@@ -59,39 +81,49 @@ const Page = () => {
   };
 
   const handleSubmit = () => {
-    const dataToSave = {
-      ...formData,
-      symptoms,
-      locations,
-    };
-    const jsonString = JSON.stringify(dataToSave, null, 2);
-    const textString = Object.entries(dataToSave)
-      .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
-      .join("\n");
+    try {
+      const dataToSave = {
+        ...formData,
+        symptoms,
+        locations,
+        previousIllnesses,
+        medications,
+      };
+      const jsonString = JSON.stringify(dataToSave, null, 2);
+      const textString = Object.entries(dataToSave)
+        .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
+        .join("\n");
 
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "survey_data.json";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "survey_data.json";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-    const txtBlob = new Blob([textString], { type: "text/plain" });
-    const txtUrl = URL.createObjectURL(txtBlob);
-    const txtLink = document.createElement("a");
-    txtLink.href = txtUrl;
-    txtLink.download = "survey_data.txt";
-    document.body.appendChild(txtLink);
-    txtLink.click();
-    document.body.removeChild(txtLink);
 
-    alert("Survey data saved successfully!");
+      const txtBlob = new Blob([textString], { type: "text/plain" });
+      const txtUrl = URL.createObjectURL(txtBlob);
+      const txtLink = document.createElement("a");
+      txtLink.href = txtUrl;
+      txtLink.download = "survey_data.txt";
+      document.body.appendChild(txtLink);
+      txtLink.click();
+      document.body.removeChild(txtLink);
+
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      alert(
+        "An error occurred while saving the survey data. Please try again or contact support if the issue persists."
+      );
+    }
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 min-h-screen relative">
       <nav className="navbar bg-base-200 shadow-lg">
         <div className="flex-1 px-2 lg:flex-none">
           <a href="/">
@@ -114,7 +146,6 @@ const Page = () => {
         </div>
       </nav>
       <section className="max-container padding-container flex flex-row justify-center gap-20 py-10 pb-32 md:gap-28 lg:py-20 xl:flex-row">
-        {/*LEFT*/}
         <div>
           <h1 className="text-blue-950 text-4xl text-center lg:text-6xl font-bold">
             Health Survey
@@ -123,14 +154,13 @@ const Page = () => {
             Answer the questions below.
           </h2>
           <div className="flex flex-wrap gap-16 pt-10 text-blue-70">
-            {/* Survey Card 1 */}
             <div className="relative flex flex-1 items-start">
               <div className="relative z-20 w-50 h-auto lg:h-auto flex-col gap-11 rounded-3xl bg-white px-5 py-8 shadow-xl">
                 <div className="flex flex-col gap-y-8">
-                  {/* Question 1 */}
                   <div>
                     <p className="pb-3">1. Please select your age.</p>
-                    <div className="flex flex-col px-2 regular-16"> {/* Changed from flex-row to flex-col for vertical alignment */}
+                    <div className="flex flex-col px-2 regular-16">
+                      {" "}
                       <label className="flex items-center gap-2 mb-2">
                         <input
                           type="radio"
@@ -172,11 +202,9 @@ const Page = () => {
                       </label>
                     </div>
                   </div>
-                  {/* Question 2 */}
                   <div>
                     <p className="pb-3">
-                      2. What are your main physical symptoms? (Type N/A if box
-                      not needed)
+                      2. What are your main physical symptoms?
                     </p>
                     {symptoms.map((symptom, index) => (
                       <div key={index} className="flex items-center gap-2 mb-2">
@@ -200,7 +228,6 @@ const Page = () => {
                       </div>
                     ))}
                   </div>
-                  {/* Question 3 */}
                   <div>
                     <p className="pb-3">
                       3. What is the general location in your body affected by
@@ -228,7 +255,6 @@ const Page = () => {
                       </div>
                     ))}
                   </div>
-                  {/* Question 4 */}
                   <div>
                     <p className="pb-3">
                       4. On a scale of 1-10, how would you rate your
@@ -251,37 +277,58 @@ const Page = () => {
                       ))}
                     </div>
                   </div>
-                  {/* Question 5 */}
                   <div>
                     <p className="pb-3">
                       5. What are some previous illnesses you've had?
                     </p>
-                    <input
-                      type="text"
-                      placeholder="Previous Illnesses"
-                      className="input input-bordered w-full max-w-xs"
-                      value={formData.previousIllnesses}
-                      onChange={(e) =>
-                        handleInputChange("previousIllnesses", e.target.value)
-                      }
-                    />
+                    {previousIllnesses.map((illness, index) => (
+                      <div key={index} className="flex items-center gap-2 mb-2">
+                        <input
+                          type="text"
+                          placeholder={`Previous Illness ${index + 1}`}
+                          className="input input-bordered w-full max-w-xs"
+                          value={illness}
+                          onChange={(e) =>
+                            handlePreviousIllnessChange(index, e.target.value)
+                          }
+                        />
+                        {index === previousIllnesses.length - 1 && (
+                          <button
+                            className="btn btn-primary"
+                            onClick={addPreviousIllness}
+                          >
+                            Add
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  {/* Question 6 */}
                   <div>
                     <p className="pb-3">
                       6. Have you taken any medications to treat these illnesses?
                     </p>
-                    <input
-                      type="text"
-                      placeholder="Medications Taken"
-                      className="input input-bordered w-full max-w-xs"
-                      value={formData.medications}
-                      onChange={(e) =>
-                        handleInputChange("medications", e.target.value)
-                      }
-                    />
+                    {medications.map((medication, index) => (
+                      <div key={index} className="flex items-center gap-2 mb-2">
+                        <input
+                          type="text"
+                          placeholder={`Medication ${index + 1}`}
+                          className="input input-bordered w-full max-w-xs"
+                          value={medication}
+                          onChange={(e) =>
+                            handleMedicationChange(index, e.target.value)
+                          }
+                        />
+                        {index === medications.length - 1 && (
+                          <button
+                            className="btn btn-primary"
+                            onClick={addMedication}
+                          >
+                            Add
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  {/* Question 7 */}
                   <div>
                     <p className="pb-3">
                       7. For about how long did you take these medications in
@@ -297,7 +344,6 @@ const Page = () => {
                       }
                     />
                   </div>
-                  {/* Question 8 */}
                   <div>
                     <p className="pb-3">
                       8. Has this illness been affected by stimulation to any
@@ -328,17 +374,16 @@ const Page = () => {
                       />
                     </div>
                   </div>
-                  {/* Question 9 */}
                   <div>
                     <p className="pb-3">
                       9. What are the incidence rates for your illness for each
-                      demographic?
+                      demographic? (Enter values as percentages)
                     </p>
                     <div className="flex flex-col gap-3">
                       {Object.keys(formData.incidenceRates).map((key) => (
                         <input
                           key={key}
-                          type="text"
+                          type="number"
                           placeholder={key}
                           className="input input-bordered w-full max-w-xs"
                           value={formData.incidenceRates[key]}
@@ -350,7 +395,6 @@ const Page = () => {
                     </div>
                   </div>
                 </div>
-                {/* Submit Button */}
                 <div className="pt-4">
                   <button
                     className="btn btn-primary w-full"
@@ -364,6 +408,20 @@ const Page = () => {
           </div>
         </div>
       </section>
+
+      {showSuccess && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-8 shadow-lg transform transition-all duration-500 ease-in-out scale-105">
+            <h3 className="text-2xl font-semibold text-green-600 mb-2">
+              Success!
+            </h3>
+            <p className="text-gray-700">
+              Your survey data has been successfully saved as both JSON and TXT
+              files. Thank you for your contribution.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
